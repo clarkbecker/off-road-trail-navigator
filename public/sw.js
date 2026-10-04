@@ -1,4 +1,4 @@
-const CACHE_NAME = 'trailnav-cache-v1';
+const CACHE_NAME = 'trailnav-cache-v2';
 const OFFLINE_URLS = [
   '/',
   '/manifest.json',
@@ -21,7 +21,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((name) => {
-          if (name !== CACHE_NAME) {
+          if (name !== CACHE_NAME && name !== 'trailnav-tiles-v1') {
             return caches.delete(name);
           }
         })
@@ -35,6 +35,27 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
+
+  // Network-first for page navigations to always load latest code
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, responseToCache);
+            });
+          }
+          return networkResponse;
+        })
+        .catch(async () => {
+          const cached = await caches.match(request);
+          return cached || (await caches.match('/'));
+        })
+    );
+    return;
+  }
 
   // Cache OpenStreetMap or satellite tiles dynamically in tile cache
   if (url.hostname.includes('tile.openstreetmap.org') || url.hostname.includes('opentopomap.org')) {

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import type { Map as LeafletMap, Polyline as LeafletPolyline, Marker as LeafletMarker, TileLayer } from 'leaflet';
-import { Crosshair, Layers } from 'lucide-react';
+import { AlertTriangle, Crosshair, Layers } from 'lucide-react';
 import { Trail, Waypoint, BreadcrumbPoint, HazardReport, TransportMode } from '@/types/trail';
 
 interface TrailMapProps {
@@ -17,6 +17,7 @@ interface TrailMapProps {
   onSelectHazard?: (hazard: HazardReport) => void;
   onMapClickAddWaypoint?: (coords: { lat: number; lng: number }) => void;
   isAddingWaypointMode?: boolean;
+  onReportHazard?: () => void;
 }
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
@@ -80,6 +81,7 @@ export default function TrailMap({
   onSelectHazard,
   onMapClickAddWaypoint,
   isAddingWaypointMode = false,
+  onReportHazard,
 }: TrailMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<LeafletMap | null>(null);
@@ -380,12 +382,12 @@ export default function TrailMap({
         </div>
       )}
 
-      {/* Map Control Floating Buttons (Positioned above the Hazard FAB) */}
-      <div className="absolute right-4 bottom-44 z-20 flex flex-col gap-2.5">
+      {/* Floating Action Buttons Column (Right Side - Unified Stack: Layers, Recenter, Hazard) */}
+      <div className="absolute right-3 sm:right-4 bottom-20 sm:bottom-24 z-30 flex flex-col items-center gap-2.5">
         {/* Layer Selector */}
         <button
           onClick={() => setActiveLayerIndex((prev) => (prev + 1) % MAP_LAYERS.length)}
-          className="p-3 bg-slate-900/90 backdrop-blur border border-slate-700/80 rounded-2xl shadow-xl hover:bg-slate-800 text-slate-200 transition-all active:scale-95 flex items-center justify-center"
+          className="w-12 h-12 bg-slate-900/90 backdrop-blur-md border border-slate-700/80 rounded-2xl shadow-xl hover:bg-slate-800 text-slate-200 transition-all active:scale-95 flex items-center justify-center"
           title={`Layer: ${MAP_LAYERS[activeLayerIndex].name}`}
         >
           <Layers className="w-5 h-5 text-orange-400" />
@@ -394,15 +396,27 @@ export default function TrailMap({
         {/* Center GPS */}
         <button
           onClick={handleCenterOnUser}
-          className="p-3 bg-slate-900/90 backdrop-blur border border-slate-700/80 rounded-2xl shadow-xl hover:bg-slate-800 text-slate-200 transition-all active:scale-95 flex items-center justify-center"
+          className="w-12 h-12 bg-slate-900/90 backdrop-blur-md border border-slate-700/80 rounded-2xl shadow-xl hover:bg-slate-800 text-slate-200 transition-all active:scale-95 flex items-center justify-center"
           title="Recenter on vehicle"
         >
           <Crosshair className="w-5 h-5 text-emerald-400" />
         </button>
+
+        {/* Oversized Glove-Friendly "Report Hazard" FAB (Min 60x60px - Master Spec V7) */}
+        {onReportHazard && (
+          <button
+            onClick={onReportHazard}
+            className="w-16 h-16 sm:w-18 sm:h-18 bg-rose-600 hover:bg-rose-500 active:scale-95 text-white rounded-full shadow-2xl shadow-rose-950/70 border-2 border-rose-400/80 flex flex-col items-center justify-center gap-0.5 transition-all select-none mt-1"
+            title="Report Trail Hazard"
+          >
+            <AlertTriangle className="w-6 h-6 stroke-[2.5]" />
+            <span className="text-[9px] font-extrabold uppercase tracking-tight">Hazard</span>
+          </button>
+        )}
       </div>
 
       {/* Layer tag pill */}
-      <div className="absolute left-4 bottom-24 z-20 bg-slate-900/80 backdrop-blur border border-slate-800 px-3 py-1 rounded-full text-[11px] text-slate-400 font-medium">
+      <div className="absolute left-3 sm:left-4 bottom-20 sm:bottom-24 z-20 bg-slate-900/80 backdrop-blur border border-slate-800 px-3 py-1 rounded-full text-[11px] text-slate-400 font-medium pointer-events-none shadow-lg">
         Layer: <span className="text-orange-400">{MAP_LAYERS[activeLayerIndex].name}</span>
       </div>
     </div>

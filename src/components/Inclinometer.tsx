@@ -22,44 +22,50 @@ export default function Inclinometer({ incline, heading }: InclinometerProps) {
   };
 
   return (
-    <div className="flex items-center gap-3 bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl p-2 px-3 shadow-2xl">
+    <div className="flex items-center gap-1.5 sm:gap-2.5 bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl p-1.5 px-2 sm:p-2 sm:px-3 shadow-2xl">
       {/* Compass / Heading */}
-      <div className="flex flex-col items-center justify-center min-w-[50px]">
-        <div className="relative w-8 h-8 flex items-center justify-center">
+      <div className="flex items-center sm:flex-col sm:items-center sm:justify-center gap-1 sm:gap-0 sm:min-w-[44px]">
+        <div className="relative w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center">
           <Compass
-            className="w-7 h-7 text-amber-500 transition-transform duration-300"
+            className="w-5 h-5 text-amber-500 transition-transform duration-300"
             style={{ transform: `rotate(${heading || 0}deg)` }}
           />
         </div>
-        <span className="text-[10px] font-mono text-slate-400 mt-0.5">
-          {heading != null ? `${Math.round(heading)}°` : 'N/A'}
+        <span className="text-[10px] font-mono text-slate-400">
+          {heading != null ? `${Math.round(heading)}°` : '--'}
         </span>
       </div>
 
-      <div className="h-8 w-px bg-slate-800" />
+      <div className="h-5 sm:h-6 w-px bg-slate-800" />
 
       {/* Pitch Gauge */}
       <div
-        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-xs font-mono font-bold transition-colors ${getStatusColor(
+        className={`flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-xl border text-[11px] sm:text-xs font-mono font-bold transition-colors ${getStatusColor(
           pitchDanger,
           pitchWarn
         )}`}
       >
-        <span className="text-[10px] font-sans font-semibold tracking-wide text-slate-400">PITCH</span>
-        <span className="text-sm">
+        <span className="text-[9px] sm:text-[10px] font-sans font-semibold tracking-wide text-slate-400">
+          <span className="sm:hidden">P</span>
+          <span className="hidden sm:inline">PITCH</span>
+        </span>
+        <span>
           {incline.pitch > 0 ? `+${incline.pitch.toFixed(1)}°` : `${incline.pitch.toFixed(1)}°`}
         </span>
       </div>
 
       {/* Roll Gauge */}
       <div
-        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-xs font-mono font-bold transition-colors ${getStatusColor(
+        className={`flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-xl border text-[11px] sm:text-xs font-mono font-bold transition-colors ${getStatusColor(
           rollDanger,
           rollWarn
         )}`}
       >
-        <span className="text-[10px] font-sans font-semibold tracking-wide text-slate-400">ROLL</span>
-        <span className="text-sm">
+        <span className="text-[9px] sm:text-[10px] font-sans font-semibold tracking-wide text-slate-400">
+          <span className="sm:hidden">R</span>
+          <span className="hidden sm:inline">ROLL</span>
+        </span>
+        <span>
           {incline.roll > 0 ? `+${incline.roll.toFixed(1)}°` : `${incline.roll.toFixed(1)}°`}
         </span>
       </div>

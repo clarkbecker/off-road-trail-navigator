@@ -128,9 +128,14 @@ export default function Home() {
     initData();
 
     if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
-      navigator.serviceWorker.register('/sw.js').catch((err) => {
-        console.warn('SW registration failed:', err);
-      });
+      navigator.serviceWorker
+        .register('/sw.js')
+        .then((reg) => {
+          reg.update();
+        })
+        .catch((err) => {
+          console.warn('SW registration failed:', err);
+        });
     }
   }, []);
 
@@ -284,32 +289,32 @@ export default function Home() {
   };
 
   return (
-    <main className="relative w-screen h-screen flex flex-col bg-slate-950 select-none overflow-hidden font-sans">
+    <main className="relative w-full h-[100dvh] max-h-[100dvh] flex flex-col bg-slate-950 select-none overflow-hidden font-sans">
       {/* Top HUD Container */}
-      <div className="absolute top-0 left-0 right-0 z-30 p-2 sm:p-3 flex flex-col gap-2 pointer-events-none">
+      <div className="absolute top-0 left-0 right-0 z-30 p-2 sm:p-3 flex flex-col gap-1.5 sm:gap-2 pointer-events-none pt-[max(0.5rem,env(safe-area-inset-top))]">
         {/* Row 1: Brand/Speed, Desktop Mode Selector, Gauges/Rider */}
-        <header className="w-full flex items-center justify-between gap-2 pointer-events-none">
+        <header className="w-full flex items-center justify-between gap-1.5 sm:gap-2 pointer-events-none">
           {/* Brand, Speed & Altitude */}
-          <div className="flex items-center gap-2 pointer-events-auto bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl px-3 py-1.5 shadow-xl">
+          <div className="flex items-center gap-1.5 sm:gap-2 pointer-events-auto bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl px-2.5 sm:px-3 py-1.5 shadow-xl">
             <div className="flex flex-col">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-orange-500">
+              <span className="text-[9px] sm:text-[10px] uppercase font-bold tracking-wider text-orange-500 leading-tight">
                 TrailNav
               </span>
-              <div className="flex items-baseline gap-1">
-                <span className="text-xl font-black font-mono text-white leading-tight">
+              <div className="flex items-baseline gap-0.5 sm:gap-1">
+                <span className="text-lg sm:text-xl font-black font-mono text-white leading-tight">
                   {speedKmh}
                 </span>
-                <span className="text-[10px] text-slate-400 font-mono uppercase">km/h</span>
+                <span className="text-[9px] sm:text-[10px] text-slate-400 font-mono uppercase">km/h</span>
               </div>
             </div>
             {currentPosition?.altitude != null && (
               <>
-                <div className="h-6 w-px bg-slate-800 ml-1.5" />
-                <div className="flex flex-col ml-1">
-                  <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">
+                <div className="h-5 sm:h-6 w-px bg-slate-800 ml-1" />
+                <div className="flex flex-col ml-0.5 sm:ml-1">
+                  <span className="text-[8px] sm:text-[9px] uppercase tracking-wider text-slate-400 font-bold leading-tight">
                     ELEV
                   </span>
-                  <span className="text-xs font-mono font-bold text-slate-200">
+                  <span className="text-[11px] sm:text-xs font-mono font-bold text-slate-200">
                     {Math.round(currentPosition.altitude)}m
                   </span>
                 </div>
@@ -318,7 +323,7 @@ export default function Home() {
           </div>
 
           {/* Desktop/Tablet Center: Mode Selector */}
-          <div className="pointer-events-auto hidden sm:block">
+          <div className="pointer-events-auto hidden md:block">
             <ModeSelector
               currentMode={transportMode}
               onSelectMode={(mode) => setTransportMode(mode)}
@@ -326,15 +331,15 @@ export default function Home() {
           </div>
 
           {/* Right: Inclinometer Gauges & Rider Profile Button */}
-          <div className="flex items-center gap-1.5 pointer-events-auto">
+          <div className="flex items-center gap-1 sm:gap-1.5 pointer-events-auto">
             {/* Rider Profile Button */}
             <button
               onClick={() => setIsPinAuthOpen(true)}
-              className="flex items-center gap-1.5 bg-slate-900/90 hover:bg-slate-800 active:scale-95 backdrop-blur-md border border-slate-800 px-2.5 py-2 rounded-2xl shadow-xl text-slate-200 text-xs font-bold transition"
+              className="flex items-center gap-1 bg-slate-900/90 hover:bg-slate-800 active:scale-95 backdrop-blur-md border border-slate-800 p-2 sm:px-2.5 sm:py-2 rounded-2xl shadow-xl text-slate-200 text-xs font-bold transition"
               title="Rider Profile PIN Login"
             >
               <User className="w-4 h-4 text-orange-400" />
-              <span className="hidden md:inline">
+              <span className="hidden lg:inline">
                 {currentRider ? `${currentRider.firstName}` : 'Rider'}
               </span>
             </button>
@@ -344,8 +349,8 @@ export default function Home() {
           </div>
         </header>
 
-        {/* Row 2: Mobile-only Mode Selector (Flows naturally below header, ZERO overlap) */}
-        <div className="sm:hidden flex justify-center pointer-events-auto">
+        {/* Row 2: Mobile/Tablet Mode Selector (Flows cleanly below header, ZERO overlap) */}
+        <div className="md:hidden flex justify-center pointer-events-auto">
           <ModeSelector
             currentMode={transportMode}
             onSelectMode={(mode) => setTransportMode(mode)}
@@ -354,12 +359,12 @@ export default function Home() {
 
         {/* Row 3: Persistent Track Recording HUD Warning Banner */}
         {isRecording && (
-          <div className="self-center pointer-events-auto bg-purple-950/95 border-2 border-purple-500/90 backdrop-blur-md px-5 py-2 rounded-full shadow-2xl flex items-center gap-3 text-xs font-mono animate-pulse">
-            <div className="flex items-center gap-2 text-purple-300 font-bold">
+          <div className="self-center pointer-events-auto bg-purple-950/95 border-2 border-purple-500/90 backdrop-blur-md px-4 sm:px-5 py-1.5 sm:py-2 rounded-full shadow-2xl flex items-center gap-2.5 sm:gap-3 text-xs font-mono animate-pulse">
+            <div className="flex items-center gap-1.5 text-purple-300 font-bold">
               <span className="w-2.5 h-2.5 rounded-full bg-purple-500 animate-ping" />
               <span>🔴 REC ({transportMode.toUpperCase()})</span>
             </div>
-            <div className="text-white font-black text-sm">
+            <div className="text-white font-black text-xs sm:text-sm">
               {currentDistanceMiles.toFixed(1)} mi ({currentDistanceKm.toFixed(1)} km)
             </div>
             <div className="text-purple-200 font-bold">
@@ -382,23 +387,12 @@ export default function Home() {
           onMapClickAddWaypoint={handleMapClickAddWaypoint}
           isAddingWaypointMode={isAddingWaypointMode}
           onSelectHazard={(h) => alert(`Hazard: ${h.title}\n${h.description || 'Reported on trail'}`)}
+          onReportHazard={() => setIsHazardModalOpen(true)}
         />
       </div>
 
-      {/* Oversized Glove-Friendly "Report Hazard" FAB (Min 60x60px - V7 Master Spec) */}
-      <div className="absolute right-4 bottom-24 z-30">
-        <button
-          onClick={() => setIsHazardModalOpen(true)}
-          className="w-16 h-16 sm:w-18 sm:h-18 bg-rose-600 hover:bg-rose-500 active:scale-95 text-white rounded-full shadow-2xl shadow-rose-950/70 border-2 border-rose-400/80 flex flex-col items-center justify-center gap-1 transition-all select-none"
-          title="Report Trail Hazard"
-        >
-          <AlertTriangle className="w-6 h-6 stroke-[2.5]" />
-          <span className="text-[9px] font-extrabold uppercase tracking-tight">Hazard</span>
-        </button>
-      </div>
-
-      {/* Bottom Control Dock */}
-      <footer className="absolute bottom-3 left-4 right-4 z-30 max-w-lg mx-auto bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-3xl p-2.5 shadow-2xl flex items-center justify-between">
+      {/* Bottom Control Dock (Anchored with safe-area spacing to prevent bottom nav clipping) */}
+      <footer className="absolute bottom-4 left-3 right-3 sm:left-4 sm:right-4 z-30 max-w-lg mx-auto bg-slate-900/95 backdrop-blur-md border border-slate-800 rounded-3xl p-2 sm:p-2.5 shadow-2xl flex items-center justify-between pb-[max(0.625rem,env(safe-area-inset-bottom))]">
         {/* Record / Stop Button */}
         {!isRecording ? (
           <button
@@ -421,7 +415,7 @@ export default function Home() {
         {/* Quick Drop Waypoint */}
         <button
           onClick={handleQuickAddCurrentLocationWaypoint}
-          className="mx-2 flex items-center justify-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 py-3 px-3 rounded-2xl transition-all active:scale-95 text-xs font-medium"
+          className="mx-1.5 sm:mx-2 flex items-center justify-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 py-3 px-2.5 sm:px-3 rounded-2xl transition-all active:scale-95 text-xs font-medium"
           title="Drop waypoint at current position"
         >
           <MapPin className="w-4 h-4 text-orange-400" />
@@ -431,7 +425,7 @@ export default function Home() {
         {/* Tap Map Waypoint Mode Toggle */}
         <button
           onClick={() => setIsAddingWaypointMode((prev) => !prev)}
-          className={`mr-2 p-3 rounded-2xl border transition-all active:scale-95 ${
+          className={`mr-1.5 sm:mr-2 p-3 rounded-2xl border transition-all active:scale-95 ${
             isAddingWaypointMode
               ? 'bg-amber-500 text-slate-950 border-amber-400 font-bold'
               : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
