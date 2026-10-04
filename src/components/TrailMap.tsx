@@ -16,24 +16,52 @@ interface TrailMapProps {
   isAddingWaypointMode?: boolean;
 }
 
+const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+
 const MAP_LAYERS = [
+  ...(MAPBOX_TOKEN
+    ? [
+        {
+          name: 'Mapbox Outdoors (HD)',
+          url: `https://api.mapbox.com/styles/v1/mapbox/outdoors-v12/tiles/{z}/{x}/{y}?access_token=${MAPBOX_TOKEN}`,
+          attribution: '© Mapbox © OpenStreetMap',
+          maxZoom: 22,
+          tileSize: 512,
+          zoomOffset: -1,
+        },
+        {
+          name: 'Mapbox Satellite Streets (HD)',
+          url: `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/tiles/{z}/{x}/{y}?access_token=${MAPBOX_TOKEN}`,
+          attribution: '© Mapbox © Maxar',
+          maxZoom: 22,
+          tileSize: 512,
+          zoomOffset: -1,
+        },
+      ]
+    : []),
   {
-    name: 'Topo / Outdoors',
+    name: 'Topo / Outdoors (OpenTopoMap)',
     url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
     attribution: '© OpenTopoMap contributors',
     maxZoom: 17,
+    tileSize: 256,
+    zoomOffset: 0,
   },
   {
     name: 'OpenStreetMap',
     url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
     attribution: '© OpenStreetMap contributors',
     maxZoom: 19,
+    tileSize: 256,
+    zoomOffset: 0,
   },
   {
     name: 'Satellite / Imagery (Esri)',
     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     attribution: '© Esri, Maxar, Earthstar Geographics',
     maxZoom: 18,
+    tileSize: 256,
+    zoomOffset: 0,
   },
 ];
 
@@ -87,6 +115,8 @@ export default function TrailMap({
       const baseTile = L.tileLayer(MAP_LAYERS[0].url, {
         attribution: MAP_LAYERS[0].attribution,
         maxZoom: MAP_LAYERS[0].maxZoom,
+        tileSize: MAP_LAYERS[0].tileSize,
+        zoomOffset: MAP_LAYERS[0].zoomOffset,
       }).addTo(map);
 
       currentTileLayerRef.current = baseTile;
@@ -134,6 +164,8 @@ export default function TrailMap({
       const newLayer = L.tileLayer(selected.url, {
         attribution: selected.attribution,
         maxZoom: selected.maxZoom,
+        tileSize: selected.tileSize,
+        zoomOffset: selected.zoomOffset,
       }).addTo(mapInstanceRef.current);
       currentTileLayerRef.current = newLayer;
     }
