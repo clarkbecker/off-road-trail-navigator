@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import type { Map as LeafletMap, Polyline as LeafletPolyline, Marker as LeafletMarker, TileLayer } from 'leaflet';
 import { AlertTriangle, Crosshair, Layers } from 'lucide-react';
 import { Trail, Waypoint, BreadcrumbPoint, HazardReport, TransportMode } from '@/types/trail';
+import MapLegend from '@/components/MapLegend';
 
 interface TrailMapProps {
   currentPosition: GeolocationCoordinates | null;
@@ -284,21 +285,56 @@ export default function TrailMap({
       trails.forEach((trail) => {
         const coords: [number, number][] = trail.points.map((p) => [p.lat, p.lng]);
         const isActive = trail.id === activeTrailId;
+        const isClosed = trail.officialStatus === 'closed';
+        const isRoadRoute = trail.routeType === 'road_route' || trail.routeType === 'street_legal_city';
+
+        // Dynamic styling:
+        // Closed -> Red dashed
+        // Road Route -> Amber dashed
+        // Bike/MTB -> Emerald green
+        // Hike -> Sky blue
+        // UTV/4x4 -> Vibrant orange
+        let color = trail.color || '#f97316';
+        let dashArray: string | undefined = undefined;
+
+        if (isClosed) {
+          color = '#ef4444';
+          dashArray = '8, 8';
+        } else if (isRoadRoute) {
+          color = '#f59e0b';
+          dashArray = '6, 6';
+        } else if (trail.costMtb != null && trail.costMtb <= 0.5 && (!trail.costUtv || trail.costUtv > 0.6)) {
+          color = '#10b981';
+        } else if (trail.costHike != null && trail.costHike <= 0.5 && (!trail.costUtv || trail.costUtv > 0.8)) {
+          color = '#0ea5e9';
+        } else {
+          color = '#f97316';
+        }
+
+        if (isActive) {
+          color = '#38bdf8';
+        }
+
         const line = L.polyline(coords, {
-          color: isActive ? '#38bdf8' : trail.color || '#f97316',
-          weight: isActive ? 6 : 4,
-          opacity: isActive ? 1 : 0.8,
+          color,
+          weight: isActive ? 6 : isRoadRoute ? 3.5 : 4.5,
+          opacity: isActive ? 1 : isClosed ? 0.95 : 0.85,
+          dashArray,
         });
 
-        line.bindTooltip(`<b>${trail.name}</b><br/>${trail.distanceKm} km • ${trail.difficulty}`, {
-          sticky: true,
-        });
+        const statusBadge = isClosed ? '🔴 CLOSED' : '🟢 OPEN';
+        const typeBadge = isRoadRoute ? '🛣️ ATV Road Route' : '🌲 Off-Road Trail';
+
+        line.bindTooltip(
+          `<b>${trail.name}</b><br/>${statusBadge} • ${typeBadge}<br/>${trail.distanceKm} km • ${trail.difficulty}`,
+          { sticky: true }
+        );
 
         line.addTo(trailsGroupRef.current);
       });
     }
     updateTrails();
-  }, [trails, activeTrailId, isMapReady]);
+  }, [trails, activeTrailId, isMapReady, transportMode]);
 
   // Render Waypoints
   useEffect(() => {
@@ -413,6 +449,11 @@ export default function TrailMap({
             <span className="text-[9px] font-extrabold uppercase tracking-tight">Hazard</span>
           </button>
         )}
+      </div>
+
+      {/* Map Legend Overlay Button (Upper Left, below HUD) */}
+      <div className="absolute left-3 sm:left-4 top-28 sm:top-24 z-20">
+        <MapLegend />
       </div>
 
       {/* Layer tag pill */}

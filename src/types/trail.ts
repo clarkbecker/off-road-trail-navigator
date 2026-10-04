@@ -5,6 +5,7 @@ export type RoutePrivacy = 'private' | 'shared' | 'public';
 export type RouteType =
   | 'designated_trail'
   | 'unmaintained_fire_road'
+  | 'road_route'
   | 'street_legal_city'
   | 'prohibited'
   | 'user_submitted';
