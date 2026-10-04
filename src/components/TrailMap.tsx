@@ -380,8 +380,8 @@ export default function TrailMap({
         </div>
       )}
 
-      {/* Map Control Floating Buttons */}
-      <div className="absolute right-4 bottom-24 z-20 flex flex-col gap-2">
+      {/* Map Control Floating Buttons (Positioned above the Hazard FAB) */}
+      <div className="absolute right-4 bottom-44 z-20 flex flex-col gap-2.5">
         {/* Layer Selector */}
         <button
           onClick={() => setActiveLayerIndex((prev) => (prev + 1) % MAP_LAYERS.length)}

@@ -285,69 +285,88 @@ export default function Home() {
 
   return (
     <main className="relative w-screen h-screen flex flex-col bg-slate-950 select-none overflow-hidden font-sans">
-      {/* Top HUD Bar */}
-      <header className="absolute top-0 left-0 right-0 z-30 p-2 sm:p-3 flex items-center justify-between pointer-events-none gap-2">
-        {/* Brand, Speed & Altitude */}
-        <div className="flex items-center gap-2 pointer-events-auto bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl px-3 py-1.5 shadow-xl">
-          <div className="flex flex-col">
-            <span className="text-[10px] uppercase font-bold tracking-wider text-orange-500">
-              TrailNav
-            </span>
-            <div className="flex items-baseline gap-1">
-              <span className="text-xl font-black font-mono text-white leading-tight">
-                {speedKmh}
+      {/* Top HUD Container */}
+      <div className="absolute top-0 left-0 right-0 z-30 p-2 sm:p-3 flex flex-col gap-2 pointer-events-none">
+        {/* Row 1: Brand/Speed, Desktop Mode Selector, Gauges/Rider */}
+        <header className="w-full flex items-center justify-between gap-2 pointer-events-none">
+          {/* Brand, Speed & Altitude */}
+          <div className="flex items-center gap-2 pointer-events-auto bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl px-3 py-1.5 shadow-xl">
+            <div className="flex flex-col">
+              <span className="text-[10px] uppercase font-bold tracking-wider text-orange-500">
+                TrailNav
               </span>
-              <span className="text-[10px] text-slate-400 font-mono uppercase">km/h</span>
-            </div>
-          </div>
-          {currentPosition?.altitude != null && (
-            <>
-              <div className="h-6 w-px bg-slate-800 ml-2" />
-              <div className="flex flex-col ml-1">
-                <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">
-                  ELEV
+              <div className="flex items-baseline gap-1">
+                <span className="text-xl font-black font-mono text-white leading-tight">
+                  {speedKmh}
                 </span>
-                <span className="text-xs font-mono font-bold text-slate-200">
-                  {Math.round(currentPosition.altitude)}m
-                </span>
+                <span className="text-[10px] text-slate-400 font-mono uppercase">km/h</span>
               </div>
-            </>
-          )}
-        </div>
+            </div>
+            {currentPosition?.altitude != null && (
+              <>
+                <div className="h-6 w-px bg-slate-800 ml-1.5" />
+                <div className="flex flex-col ml-1">
+                  <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">
+                    ELEV
+                  </span>
+                  <span className="text-xs font-mono font-bold text-slate-200">
+                    {Math.round(currentPosition.altitude)}m
+                  </span>
+                </div>
+              </>
+            )}
+          </div>
 
-        {/* Center: Multi-Modal Transport Selector (UTV, MTB, Hike) */}
-        <div className="pointer-events-auto hidden sm:block">
+          {/* Desktop/Tablet Center: Mode Selector */}
+          <div className="pointer-events-auto hidden sm:block">
+            <ModeSelector
+              currentMode={transportMode}
+              onSelectMode={(mode) => setTransportMode(mode)}
+            />
+          </div>
+
+          {/* Right: Inclinometer Gauges & Rider Profile Button */}
+          <div className="flex items-center gap-1.5 pointer-events-auto">
+            {/* Rider Profile Button */}
+            <button
+              onClick={() => setIsPinAuthOpen(true)}
+              className="flex items-center gap-1.5 bg-slate-900/90 hover:bg-slate-800 active:scale-95 backdrop-blur-md border border-slate-800 px-2.5 py-2 rounded-2xl shadow-xl text-slate-200 text-xs font-bold transition"
+              title="Rider Profile PIN Login"
+            >
+              <User className="w-4 h-4 text-orange-400" />
+              <span className="hidden md:inline">
+                {currentRider ? `${currentRider.firstName}` : 'Rider'}
+              </span>
+            </button>
+
+            {/* Vehicle Incline Gauges */}
+            <Inclinometer incline={incline} heading={heading} />
+          </div>
+        </header>
+
+        {/* Row 2: Mobile-only Mode Selector (Flows naturally below header, ZERO overlap) */}
+        <div className="sm:hidden flex justify-center pointer-events-auto">
           <ModeSelector
             currentMode={transportMode}
             onSelectMode={(mode) => setTransportMode(mode)}
           />
         </div>
 
-        {/* Right: Inclinometer Gauges & Rider Profile Button */}
-        <div className="flex items-center gap-2 pointer-events-auto">
-          {/* Rider Profile Button */}
-          <button
-            onClick={() => setIsPinAuthOpen(true)}
-            className="flex items-center gap-1.5 bg-slate-900/90 hover:bg-slate-800 active:scale-95 backdrop-blur-md border border-slate-800 px-3 py-2 rounded-2xl shadow-xl text-slate-200 text-xs font-bold transition"
-            title="Rider Profile PIN Login"
-          >
-            <User className="w-4 h-4 text-orange-400" />
-            <span className="hidden md:inline">
-              {currentRider ? `${currentRider.firstName}` : 'Rider'}
-            </span>
-          </button>
-
-          {/* Vehicle Incline Gauges */}
-          <Inclinometer incline={incline} heading={heading} />
-        </div>
-      </header>
-
-      {/* Mobile-only Mode Selector Row */}
-      <div className="sm:hidden absolute top-14 left-1/2 -translate-x-1/2 z-30 pointer-events-auto">
-        <ModeSelector
-          currentMode={transportMode}
-          onSelectMode={(mode) => setTransportMode(mode)}
-        />
+        {/* Row 3: Persistent Track Recording HUD Warning Banner */}
+        {isRecording && (
+          <div className="self-center pointer-events-auto bg-purple-950/95 border-2 border-purple-500/90 backdrop-blur-md px-5 py-2 rounded-full shadow-2xl flex items-center gap-3 text-xs font-mono animate-pulse">
+            <div className="flex items-center gap-2 text-purple-300 font-bold">
+              <span className="w-2.5 h-2.5 rounded-full bg-purple-500 animate-ping" />
+              <span>🔴 REC ({transportMode.toUpperCase()})</span>
+            </div>
+            <div className="text-white font-black text-sm">
+              {currentDistanceMiles.toFixed(1)} mi ({currentDistanceKm.toFixed(1)} km)
+            </div>
+            <div className="text-purple-200 font-bold">
+              {formatTimer(elapsedSeconds)}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Main Map Viewport */}
@@ -365,22 +384,6 @@ export default function Home() {
           onSelectHazard={(h) => alert(`Hazard: ${h.title}\n${h.description || 'Reported on trail'}`)}
         />
       </div>
-
-      {/* Persistent Track Recording HUD Warning Banner (V7 Master Spec) */}
-      {isRecording && (
-        <div className="absolute top-16 sm:top-20 left-1/2 -translate-x-1/2 z-30 bg-purple-950/95 border-2 border-purple-500/90 backdrop-blur-md px-5 py-2.5 rounded-full shadow-2xl flex items-center gap-4 text-xs font-mono animate-pulse">
-          <div className="flex items-center gap-2 text-purple-300 font-bold">
-            <span className="w-3 h-3 rounded-full bg-purple-500 animate-ping" />
-            <span>🔴 RECORDING ({transportMode.toUpperCase()})</span>
-          </div>
-          <div className="text-white font-black text-sm">
-            {currentDistanceMiles.toFixed(1)} miles ({currentDistanceKm.toFixed(1)} km)
-          </div>
-          <div className="text-purple-200 font-bold">
-            {formatTimer(elapsedSeconds)}
-          </div>
-        </div>
-      )}
 
       {/* Oversized Glove-Friendly "Report Hazard" FAB (Min 60x60px - V7 Master Spec) */}
       <div className="absolute right-4 bottom-24 z-30">
