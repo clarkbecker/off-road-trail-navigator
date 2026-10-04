@@ -77,12 +77,14 @@ export default function TrailMap({
 }: TrailMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<LeafletMap | null>(null);
+  const isInitializingRef = useRef(false);
   const userMarkerRef = useRef<LeafletMarker | null>(null);
   const recordingPolylineRef = useRef<LeafletPolyline | null>(null);
   const trailsGroupRef = useRef<any>(null);
   const waypointsGroupRef = useRef<any>(null);
   const currentTileLayerRef = useRef<TileLayer | null>(null);
 
+  const [isMapReady, setIsMapReady] = useState(false);
   const [activeLayerIndex, setActiveLayerIndex] = useState(0);
   const [hasCenteredOnce, setHasCenteredOnce] = useState(false);
 
@@ -91,54 +93,81 @@ export default function TrailMap({
     let isMounted = true;
 
     async function initLeaflet() {
-      if (typeof window === 'undefined' || !mapContainerRef.current || mapInstanceRef.current) return;
-      const L = (await import('leaflet')).default;
+      if (typeof window === 'undefined' || !mapContainerRef.current) return;
+      if (mapInstanceRef.current || isInitializingRef.current) return;
+      isInitializingRef.current = true;
 
-      // Fix default Leaflet icon paths
-      delete (L.Icon.Default.prototype as any)._getIconUrl;
-      L.Icon.Default.mergeOptions({
-        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-      });
-
-      const initialLat = currentPosition?.latitude || 37.7749;
-      const initialLng = currentPosition?.longitude || -122.4194;
-      const initialZoom = currentPosition ? 14 : 11;
-
-      const map = L.map(mapContainerRef.current, {
-        center: [initialLat, initialLng],
-        zoom: initialZoom,
-        zoomControl: false,
-      });
-
-      const baseTile = L.tileLayer(MAP_LAYERS[0].url, {
-        attribution: MAP_LAYERS[0].attribution,
-        maxZoom: MAP_LAYERS[0].maxZoom,
-        tileSize: MAP_LAYERS[0].tileSize,
-        zoomOffset: MAP_LAYERS[0].zoomOffset,
-      }).addTo(map);
-
-      currentTileLayerRef.current = baseTile;
-      trailsGroupRef.current = L.layerGroup().addTo(map);
-      waypointsGroupRef.current = L.layerGroup().addTo(map);
-
-      // Active recording line
-      recordingPolylineRef.current = L.polyline([], {
-        color: '#ef4444',
-        weight: 5,
-        opacity: 0.9,
-        dashArray: '4, 8',
-      }).addTo(map);
-
-      // Map click handler for dropping waypoint
-      map.on('click', (e) => {
-        if (onMapClickAddWaypoint) {
-          onMapClickAddWaypoint({ lat: e.latlng.lat, lng: e.latlng.lng });
+      try {
+        const L = (await import('leaflet')).default;
+        if (!isMounted || !mapContainerRef.current || mapInstanceRef.current) {
+          isInitializingRef.current = false;
+          return;
         }
-      });
 
-      mapInstanceRef.current = map;
+        const container = mapContainerRef.current as any;
+        if (container._leaflet_id) {
+          container._leaflet_id = null;
+        }
+
+        // Fix default Leaflet icon paths
+        delete (L.Icon.Default.prototype as any)._getIconUrl;
+        L.Icon.Default.mergeOptions({
+          iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+          iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+          shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+        });
+
+        const initialLat = currentPosition?.latitude || 37.7749;
+        const initialLng = currentPosition?.longitude || -122.4194;
+        const initialZoom = currentPosition ? 14 : 11;
+
+        const map = L.map(container, {
+          center: [initialLat, initialLng],
+          zoom: initialZoom,
+          zoomControl: false,
+        });
+
+        if (!isMounted) {
+          map.remove();
+          return;
+        }
+
+        mapInstanceRef.current = map;
+
+        const baseTile = L.tileLayer(MAP_LAYERS[0].url, {
+          attribution: MAP_LAYERS[0].attribution,
+          maxZoom: MAP_LAYERS[0].maxZoom,
+          tileSize: MAP_LAYERS[0].tileSize,
+          zoomOffset: MAP_LAYERS[0].zoomOffset,
+        }).addTo(map);
+
+        currentTileLayerRef.current = baseTile;
+        trailsGroupRef.current = L.layerGroup().addTo(map);
+        waypointsGroupRef.current = L.layerGroup().addTo(map);
+
+        // Active recording line
+        recordingPolylineRef.current = L.polyline([], {
+          color: '#ef4444',
+          weight: 5,
+          opacity: 0.9,
+          dashArray: '4, 8',
+        }).addTo(map);
+
+        // Map click handler for dropping waypoint
+        map.on('click', (e) => {
+          if (onMapClickAddWaypoint) {
+            onMapClickAddWaypoint({ lat: e.latlng.lat, lng: e.latlng.lng });
+          }
+        });
+
+        if (isMounted) {
+          setIsMapReady(true);
+        }
+      } catch (err) {
+        console.error('Leaflet initialization error:', err);
+      } finally {
+        isInitializingRef.current = false;
+      }
     }
 
     initLeaflet();
@@ -149,13 +178,22 @@ export default function TrailMap({
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
       }
+      if (mapContainerRef.current && (mapContainerRef.current as any)._leaflet_id) {
+        (mapContainerRef.current as any)._leaflet_id = null;
+      }
+      userMarkerRef.current = null;
+      recordingPolylineRef.current = null;
+      trailsGroupRef.current = null;
+      waypointsGroupRef.current = null;
+      currentTileLayerRef.current = null;
+      setIsMapReady(false);
     };
   }, []);
 
   // Switch Layer
   useEffect(() => {
     async function updateTile() {
-      if (!mapInstanceRef.current) return;
+      if (!mapInstanceRef.current || !isMapReady) return;
       const L = (await import('leaflet')).default;
       if (currentTileLayerRef.current) {
         mapInstanceRef.current.removeLayer(currentTileLayerRef.current);
@@ -170,12 +208,12 @@ export default function TrailMap({
       currentTileLayerRef.current = newLayer;
     }
     updateTile();
-  }, [activeLayerIndex]);
+  }, [activeLayerIndex, isMapReady]);
 
   // Update User GPS Marker
   useEffect(() => {
     async function updateUserMarker() {
-      if (!mapInstanceRef.current || !currentPosition) return;
+      if (!mapInstanceRef.current || !currentPosition || !isMapReady) return;
       const L = (await import('leaflet')).default;
 
       const pos: [number, number] = [currentPosition.latitude, currentPosition.longitude];
@@ -206,7 +244,7 @@ export default function TrailMap({
       }
     }
     updateUserMarker();
-  }, [currentPosition, hasCenteredOnce]);
+  }, [currentPosition, hasCenteredOnce, isMapReady]);
 
   // Update Recorded Breadcrumb Line
   useEffect(() => {
@@ -218,7 +256,7 @@ export default function TrailMap({
   // Render Saved Trails
   useEffect(() => {
     async function updateTrails() {
-      if (!trailsGroupRef.current) return;
+      if (!trailsGroupRef.current || !isMapReady) return;
       const L = (await import('leaflet')).default;
       trailsGroupRef.current.clearLayers();
 
@@ -239,12 +277,12 @@ export default function TrailMap({
       });
     }
     updateTrails();
-  }, [trails, activeTrailId]);
+  }, [trails, activeTrailId, isMapReady]);
 
   // Render Waypoints
   useEffect(() => {
     async function updateWaypoints() {
-      if (!waypointsGroupRef.current) return;
+      if (!waypointsGroupRef.current || !isMapReady) return;
       const L = (await import('leaflet')).default;
       waypointsGroupRef.current.clearLayers();
 
@@ -267,7 +305,7 @@ export default function TrailMap({
       });
     }
     updateWaypoints();
-  }, [waypoints, onSelectWaypoint]);
+  }, [waypoints, onSelectWaypoint, isMapReady]);
 
   const handleCenterOnUser = () => {
     if (mapInstanceRef.current && currentPosition) {
