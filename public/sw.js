@@ -2,7 +2,7 @@ const CACHE_NAME = 'trailnav-cache-v1';
 const OFFLINE_URLS = [
   '/',
   '/manifest.json',
-  '/globals.css'
+  '/icon.svg',
 ];
 
 self.addEventListener('install', (event) => {
