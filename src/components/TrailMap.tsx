@@ -3,15 +3,18 @@
 import React, { useEffect, useRef, useState } from 'react';
 import type { Map as LeafletMap, Polyline as LeafletPolyline, Marker as LeafletMarker, TileLayer } from 'leaflet';
 import { Crosshair, Layers } from 'lucide-react';
-import { Trail, Waypoint, BreadcrumbPoint } from '@/types/trail';
+import { Trail, Waypoint, BreadcrumbPoint, HazardReport, TransportMode } from '@/types/trail';
 
 interface TrailMapProps {
   currentPosition: GeolocationCoordinates | null;
   recordedPoints: BreadcrumbPoint[];
   trails: Trail[];
   waypoints: Waypoint[];
+  hazards?: HazardReport[];
+  transportMode?: TransportMode;
   activeTrailId: string | null;
   onSelectWaypoint?: (wp: Waypoint) => void;
+  onSelectHazard?: (hazard: HazardReport) => void;
   onMapClickAddWaypoint?: (coords: { lat: number; lng: number }) => void;
   isAddingWaypointMode?: boolean;
 }
@@ -70,8 +73,11 @@ export default function TrailMap({
   recordedPoints,
   trails,
   waypoints,
+  hazards = [],
+  transportMode = 'utv',
   activeTrailId,
   onSelectWaypoint,
+  onSelectHazard,
   onMapClickAddWaypoint,
   isAddingWaypointMode = false,
 }: TrailMapProps) {
@@ -82,6 +88,7 @@ export default function TrailMap({
   const recordingPolylineRef = useRef<LeafletPolyline | null>(null);
   const trailsGroupRef = useRef<any>(null);
   const waypointsGroupRef = useRef<any>(null);
+  const hazardsGroupRef = useRef<any>(null);
   const currentTileLayerRef = useRef<TileLayer | null>(null);
 
   const [isMapReady, setIsMapReady] = useState(false);
@@ -144,13 +151,17 @@ export default function TrailMap({
         currentTileLayerRef.current = baseTile;
         trailsGroupRef.current = L.layerGroup().addTo(map);
         waypointsGroupRef.current = L.layerGroup().addTo(map);
+        hazardsGroupRef.current = L.layerGroup().addTo(map);
 
-        // Active recording line
+        // Active recording line with mode-based initial styling
+        const initialTrackColor =
+          transportMode === 'utv' ? '#c084fc' : transportMode === 'mtb' ? '#06b6d4' : '#10b981';
+
         recordingPolylineRef.current = L.polyline([], {
-          color: '#ef4444',
-          weight: 5,
-          opacity: 0.9,
-          dashArray: '4, 8',
+          color: initialTrackColor,
+          weight: 6,
+          opacity: 0.95,
+          dashArray: transportMode === 'utv' ? '6, 8' : undefined,
         }).addTo(map);
 
         // Map click handler for dropping waypoint
@@ -185,6 +196,7 @@ export default function TrailMap({
       recordingPolylineRef.current = null;
       trailsGroupRef.current = null;
       waypointsGroupRef.current = null;
+      hazardsGroupRef.current = null;
       currentTileLayerRef.current = null;
       setIsMapReady(false);
     };
@@ -246,12 +258,19 @@ export default function TrailMap({
     updateUserMarker();
   }, [currentPosition, hasCenteredOnce, isMapReady]);
 
-  // Update Recorded Breadcrumb Line
+  // Update Recorded Breadcrumb Line & Styling
   useEffect(() => {
     if (!recordingPolylineRef.current) return;
     const latlngs: [number, number][] = recordedPoints.map((p) => [p.lat, p.lng]);
     recordingPolylineRef.current.setLatLngs(latlngs);
-  }, [recordedPoints]);
+
+    const trackColor =
+      transportMode === 'utv' ? '#c084fc' : transportMode === 'mtb' ? '#06b6d4' : '#10b981';
+    recordingPolylineRef.current.setStyle({
+      color: trackColor,
+      dashArray: transportMode === 'utv' ? '6, 8' : undefined,
+    });
+  }, [recordedPoints, transportMode]);
 
   // Render Saved Trails
   useEffect(() => {
@@ -306,6 +325,43 @@ export default function TrailMap({
     }
     updateWaypoints();
   }, [waypoints, onSelectWaypoint, isMapReady]);
+
+  // Render Hazard Alerts (V7 Spec)
+  useEffect(() => {
+    async function updateHazards() {
+      if (!hazardsGroupRef.current || !isMapReady) return;
+      const L = (await import('leaflet')).default;
+      hazardsGroupRef.current.clearLayers();
+
+      hazards.forEach((hazard) => {
+        if (!hazard.active) return;
+
+        const hazardColor =
+          hazard.hazardType === 'trail_impassable'
+            ? '#ef4444'
+            : hazard.hazardType === 'washout_rut'
+            ? '#f59e0b'
+            : '#f97316';
+
+        const marker = L.circleMarker([hazard.lat, hazard.lng], {
+          radius: 10,
+          fillColor: hazardColor,
+          color: '#ffffff',
+          weight: 2.5,
+          opacity: 1,
+          fillOpacity: 0.95,
+        });
+
+        marker.bindTooltip(`⚠️ <b>${hazard.title}</b><br/>${hazard.description || 'Hazard alert'}`);
+        marker.on('click', () => {
+          if (onSelectHazard) onSelectHazard(hazard);
+        });
+
+        marker.addTo(hazardsGroupRef.current);
+      });
+    }
+    updateHazards();
+  }, [hazards, onSelectHazard, isMapReady]);
 
   const handleCenterOnUser = () => {
     if (mapInstanceRef.current && currentPosition) {
