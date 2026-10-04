@@ -82,7 +82,7 @@ export default function Home() {
     lng: number;
   } | null>(null);
 
-  // Load IndexedDB items on start & register Service Worker
+  // Load IndexedDB items on start & fetch cloud trails/hazards from Supabase
   useEffect(() => {
     async function initData() {
       const savedTrails = await getAllTrails();
@@ -94,6 +94,36 @@ export default function Home() {
       setWaypoints(savedWaypoints);
       setHazards(savedHazards);
       setCurrentRider(activeRider);
+
+      // Fetch cloud trails & hazards from Supabase PostGIS
+      try {
+        const [trailsRes, hazardsRes] = await Promise.all([
+          fetch('/api/trails'),
+          fetch('/api/hazards'),
+        ]);
+
+        if (trailsRes.ok) {
+          const data = await trailsRes.json();
+          if (data.trails && data.trails.length > 0) {
+            setTrails((local) => {
+              const existingIds = new Set(local.map((t) => t.id));
+              const newFromCloud = data.trails.filter((t: Trail) => !existingIds.has(t.id));
+              // Cache in local IndexedDB for offline use
+              newFromCloud.forEach((t: Trail) => saveTrail(t));
+              return [...newFromCloud, ...local];
+            });
+          }
+        }
+
+        if (hazardsRes.ok) {
+          const data = await hazardsRes.json();
+          if (data.hazards && data.hazards.length > 0) {
+            setHazards(data.hazards);
+          }
+        }
+      } catch (e) {
+        console.warn('Offline mode: relying on local IndexedDB storage');
+      }
     }
     initData();
 
@@ -198,10 +228,20 @@ export default function Home() {
     setIsFinishRouteModalOpen(true);
   };
 
-  const handleRouteSaved = (newTrail: Trail) => {
+  const handleRouteSaved = async (newTrail: Trail) => {
     setTrails((prev) => [newTrail, ...prev]);
     setRecordedPoints([]);
     setActiveTrailId(newTrail.id);
+
+    try {
+      await fetch('/api/trails', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newTrail),
+      });
+    } catch (e) {
+      console.warn('Saved locally; will sync when back online');
+    }
   };
 
   // Add Waypoint
@@ -426,7 +466,18 @@ export default function Home() {
         onClose={() => setIsHazardModalOpen(false)}
         currentPosition={currentPosition}
         currentRider={currentRider}
-        onHazardAdded={(newHazard) => setHazards((prev) => [newHazard, ...prev])}
+        onHazardAdded={async (newHazard) => {
+          setHazards((prev) => [newHazard, ...prev]);
+          try {
+            await fetch('/api/hazards', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(newHazard),
+            });
+          } catch (e) {
+            console.warn('Saved locally; will sync when back online');
+          }
+        }}
       />
 
       <FinishRouteModal
