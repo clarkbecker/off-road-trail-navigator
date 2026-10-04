@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Trail, Waypoint } from '@/types/trail';
 import { exportTrailToGpx, parseGpx } from '@/lib/gpx';
-import { Download, Upload, Trash2, MapPin, Eye, Mountain, X } from 'lucide-react';
+import { Download, Upload, Trash2, MapPin, Eye, Mountain, X, Camera } from 'lucide-react';
 
 interface TrailDrawerProps {
   isOpen: boolean;
@@ -189,28 +189,52 @@ export default function TrailDrawer({
                 waypoints.map((wp) => (
                   <div
                     key={wp.id}
-                    className="p-3.5 rounded-xl border border-slate-800 bg-slate-950/40 hover:border-slate-700 flex items-start justify-between"
+                    className="p-3.5 rounded-xl border border-slate-800 bg-slate-950/40 hover:border-slate-700 flex flex-col gap-2"
                   >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4 text-orange-400" />
-                        <h3 className="font-semibold text-slate-100 text-sm">{wp.name}</h3>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-4 h-4 text-orange-400 shrink-0" />
+                          <h3 className="font-semibold text-slate-100 text-sm truncate">{wp.name}</h3>
+                          {wp.mediaUrl && (
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-cyan-950/80 border border-cyan-800/80 text-cyan-300 flex items-center gap-1">
+                              <Camera className="w-3 h-3" />
+                              {wp.mediaType === 'video' ? 'Video' : 'Photo'}
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-1 text-xs text-slate-400 flex items-center gap-2 font-mono">
+                          <span className="capitalize text-amber-400">{wp.category}</span>
+                          <span>•</span>
+                          <span>
+                            {wp.lat.toFixed(4)}, {wp.lng.toFixed(4)}
+                          </span>
+                        </div>
+                        {wp.notes && <p className="text-xs text-slate-400 mt-1 italic">{wp.notes}</p>}
                       </div>
-                      <div className="mt-1 text-xs text-slate-400 flex items-center gap-2 font-mono">
-                        <span className="capitalize text-amber-400">{wp.category}</span>
-                        <span>•</span>
-                        <span>
-                          {wp.lat.toFixed(4)}, {wp.lng.toFixed(4)}
-                        </span>
-                      </div>
-                      {wp.notes && <p className="text-xs text-slate-400 mt-1 italic">{wp.notes}</p>}
+                      <button
+                        onClick={() => onDeleteWaypoint(wp.id)}
+                        className="p-1.5 rounded-lg bg-slate-800 hover:bg-red-950/50 text-slate-400 hover:text-red-400 border border-slate-700 ml-2 shrink-0"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </div>
-                    <button
-                      onClick={() => onDeleteWaypoint(wp.id)}
-                      className="p-1.5 rounded-lg bg-slate-800 hover:bg-red-950/50 text-slate-400 hover:text-red-400 border border-slate-700"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+
+                    {/* Media Thumbnail */}
+                    {wp.mediaUrl && (
+                      <div className="mt-1 rounded-lg overflow-hidden border border-slate-800 bg-black max-w-xs">
+                        {wp.mediaType === 'video' ? (
+                          <video src={wp.mediaUrl} controls className="w-full max-h-40 object-cover" />
+                        ) : (
+                          <img
+                            src={wp.mediaUrl}
+                            alt={wp.name}
+                            className="w-full max-h-40 object-cover hover:scale-105 transition-transform cursor-pointer"
+                            onClick={() => window.open(wp.mediaUrl, '_blank')}
+                          />
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))
               )}

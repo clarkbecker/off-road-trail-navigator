@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Info, X, CheckCircle, AlertTriangle, AlertOctagon, HelpCircle } from 'lucide-react';
+import { Info, X, CheckCircle, AlertTriangle, AlertOctagon, HelpCircle, Camera } from 'lucide-react';
 
 interface MapLegendProps {
   className?: string;
@@ -115,6 +115,15 @@ export default function MapLegend({ className = '' }: MapLegendProps) {
                 <span className="text-slate-200">Hazard / Obstacle Report</span>
               </div>
               <span className="text-[10px] text-amber-400 font-mono">Map Pin</span>
+            </div>
+
+            {/* Scenic Viewpoint / Photo */}
+            <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2">
+                <Camera className="w-3.5 h-3.5 text-cyan-400" />
+                <span className="text-slate-200">Scenic Photo / Video Point</span>
+              </div>
+              <span className="text-[10px] text-cyan-400 font-mono">Cyan Pin</span>
             </div>
           </div>
 

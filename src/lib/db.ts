@@ -38,10 +38,15 @@ interface TrailNavDB extends DBSchema {
     key: string;
     value: any;
   };
+  media: {
+    key: string;
+    value: any;
+    indexes: { 'by-date': number };
+  };
 }
 
 const DB_NAME = 'trailnav-db';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 let dbPromise: Promise<IDBPDatabase<TrailNavDB>> | null = null;
 
@@ -78,10 +83,36 @@ export function getDatabase() {
             queueStore.createIndex('by-date', 'timestamp');
           }
         }
+
+        if (oldVersion < 3) {
+          if (!db.objectStoreNames.contains('media')) {
+            const mediaStore = db.createObjectStore('media', { keyPath: 'id' });
+            mediaStore.createIndex('by-date', 'createdAt');
+          }
+        }
       },
     });
   }
   return dbPromise;
+}
+
+// Media Operations (Quick Camera Capture)
+export async function saveTrailMedia(item: any): Promise<void> {
+  const db = await getDatabase();
+  if (!db) return;
+  await db.put('media', item);
+}
+
+export async function getAllTrailMedia(): Promise<any[]> {
+  const db = await getDatabase();
+  if (!db) return [];
+  return db.getAllFromIndex('media', 'by-date');
+}
+
+export async function deleteTrailMedia(id: string): Promise<void> {
+  const db = await getDatabase();
+  if (!db) return;
+  await db.delete('media', id);
 }
 
 // Trail Operations

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import type { Map as LeafletMap, Polyline as LeafletPolyline, Marker as LeafletMarker, TileLayer } from 'leaflet';
-import { AlertTriangle, Crosshair, Layers } from 'lucide-react';
+import { AlertTriangle, Crosshair, Layers, Camera } from 'lucide-react';
 import { Trail, Waypoint, BreadcrumbPoint, HazardReport, TransportMode } from '@/types/trail';
 import MapLegend from '@/components/MapLegend';
 
@@ -19,6 +19,7 @@ interface TrailMapProps {
   onMapClickAddWaypoint?: (coords: { lat: number; lng: number }) => void;
   isAddingWaypointMode?: boolean;
   onReportHazard?: () => void;
+  onQuickCamera?: () => void;
 }
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
@@ -83,6 +84,7 @@ export default function TrailMap({
   onMapClickAddWaypoint,
   isAddingWaypointMode = false,
   onReportHazard,
+  onQuickCamera,
 }: TrailMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<LeafletMap | null>(null);
@@ -344,16 +346,42 @@ export default function TrailMap({
       waypointsGroupRef.current.clearLayers();
 
       waypoints.forEach((wp) => {
+        const isScenic = wp.category === 'scenic';
+        const hasMedia = Boolean(wp.mediaUrl);
+
         const marker = L.circleMarker([wp.lat, wp.lng], {
-          radius: 8,
-          fillColor: wp.category === 'hazard' ? '#ef4444' : wp.category === 'campsite' ? '#10b981' : '#f59e0b',
-          color: '#ffffff',
-          weight: 2,
+          radius: hasMedia ? 9 : 8,
+          fillColor:
+            wp.category === 'hazard'
+              ? '#ef4444'
+              : wp.category === 'campsite'
+              ? '#10b981'
+              : isScenic
+              ? '#06b6d4'
+              : '#f59e0b',
+          color: hasMedia ? '#38bdf8' : '#ffffff',
+          weight: hasMedia ? 3 : 2,
           opacity: 1,
-          fillOpacity: 0.9,
+          fillOpacity: 0.92,
         });
 
-        marker.bindTooltip(`<b>${wp.name}</b> (${wp.category})`);
+        const mediaHtml = wp.mediaUrl
+          ? wp.mediaType === 'video'
+            ? `<div style="margin-top:6px;"><video src="${wp.mediaUrl}" controls style="max-width:200px; border-radius:8px; display:block;" /></div>`
+            : `<div style="margin-top:6px;"><img src="${wp.mediaUrl}" alt="${wp.name}" style="max-width:200px; max-height:140px; object-fit:cover; border-radius:8px; display:block;" /></div>`
+          : '';
+
+        const popupContent = `
+          <div style="font-family:system-ui,-apple-system,sans-serif; min-width:140px; color:#0f172a;">
+            <div style="font-weight:700; font-size:13px;">${wp.name}</div>
+            <div style="font-size:11px; color:#64748b; text-transform:capitalize;">${wp.category}${wp.mediaType ? ` • 📷 ${wp.mediaType}` : ''}</div>
+            ${wp.notes ? `<div style="font-size:12px; margin-top:4px; color:#334155;">${wp.notes}</div>` : ''}
+            ${mediaHtml}
+          </div>
+        `;
+
+        marker.bindPopup(popupContent);
+        marker.bindTooltip(`<b>${wp.name}</b> (${wp.category})${hasMedia ? ' 📷' : ''}`);
         marker.on('click', () => {
           if (onSelectWaypoint) onSelectWaypoint(wp);
         });
@@ -437,6 +465,17 @@ export default function TrailMap({
         >
           <Crosshair className="w-5 h-5 text-emerald-400" />
         </button>
+
+        {/* Quick Camera Shutter FAB (Tablet Rear Camera) */}
+        {onQuickCamera && (
+          <button
+            onClick={onQuickCamera}
+            className="w-12 h-12 bg-slate-900/90 backdrop-blur-md border border-cyan-500/50 rounded-2xl shadow-xl hover:bg-slate-800 text-slate-200 transition-all active:scale-95 flex items-center justify-center group"
+            title="Quick Photo / Video (Rear Camera)"
+          >
+            <Camera className="w-5 h-5 text-cyan-400 group-hover:scale-110 transition-transform" />
+          </button>
+        )}
 
         {/* Oversized Glove-Friendly "Report Hazard" FAB (Min 60x60px - Master Spec V7) */}
         {onReportHazard && (

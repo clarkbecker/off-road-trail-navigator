@@ -50,6 +50,8 @@ export interface Waypoint {
   elevation?: number;
   category: 'campsite' | 'hazard' | 'obstacle' | 'water' | 'scenic' | 'fuel' | 'general';
   notes?: string;
+  mediaUrl?: string;
+  mediaType?: 'photo' | 'video';
   createdAt: number;
 }
 
@@ -93,4 +95,19 @@ export interface MapLayerConfig {
 export interface VehicleIncline {
   pitch: number; // degrees (-front / +back)
   roll: number;  // degrees (-left / +right)
+}
+
+export interface TrailMedia {
+  id: string;
+  type: 'photo' | 'video';
+  dataUrl?: string;
+  blob?: Blob;
+  lat: number;
+  lng: number;
+  elevation?: number | null;
+  heading?: number | null;
+  speedKmh?: number | null;
+  createdAt: number;
+  title?: string;
+  notes?: string;
 }

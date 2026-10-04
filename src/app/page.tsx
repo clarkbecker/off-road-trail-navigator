@@ -29,6 +29,7 @@ import ModeSelector from '@/components/ModeSelector';
 import HazardModal from '@/components/HazardModal';
 import PinAuthModal from '@/components/PinAuthModal';
 import FinishRouteModal from '@/components/FinishRouteModal';
+import QuickCameraModal from '@/components/QuickCameraModal';
 import {
   Play,
   Square,
@@ -75,6 +76,7 @@ export default function Home() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isPinAuthOpen, setIsPinAuthOpen] = useState(false);
   const [isHazardModalOpen, setIsHazardModalOpen] = useState(false);
+  const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
   const [isFinishRouteModalOpen, setIsFinishRouteModalOpen] = useState(false);
   const [isAddingWaypointMode, setIsAddingWaypointMode] = useState(false);
   const [selectedCoordsForWaypoint, setSelectedCoordsForWaypoint] = useState<{
@@ -404,6 +406,7 @@ export default function Home() {
           isAddingWaypointMode={isAddingWaypointMode}
           onSelectHazard={(h) => alert(`Hazard: ${h.title}\n${h.description || 'Reported on trail'}`)}
           onReportHazard={() => setIsHazardModalOpen(true)}
+          onQuickCamera={() => setIsCameraModalOpen(true)}
         />
       </div>
 
@@ -530,6 +533,15 @@ export default function Home() {
         onClose={() => setSelectedCoordsForWaypoint(null)}
         coordinates={selectedCoordsForWaypoint}
         onSave={handleSaveWaypoint}
+      />
+
+      <QuickCameraModal
+        isOpen={isCameraModalOpen}
+        onClose={() => setIsCameraModalOpen(false)}
+        currentPosition={currentPosition}
+        heading={heading}
+        speedKmh={speedKmh}
+        onSaveWaypoint={handleSaveWaypoint}
       />
     </main>
   );
