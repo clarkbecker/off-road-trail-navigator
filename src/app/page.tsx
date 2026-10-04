@@ -137,6 +137,19 @@ export default function Home() {
           console.warn('SW registration failed:', err);
         });
     }
+
+    // Set accurate viewport height on mobile to completely prevent toolbar/OS nav cutoffs
+    const updateAppHeight = () => {
+      const vh = window.innerHeight;
+      document.documentElement.style.setProperty('--app-height', `${vh}px`);
+    };
+    updateAppHeight();
+    window.addEventListener('resize', updateAppHeight);
+    window.addEventListener('orientationchange', updateAppHeight);
+    return () => {
+      window.removeEventListener('resize', updateAppHeight);
+      window.removeEventListener('orientationchange', updateAppHeight);
+    };
   }, []);
 
   // Geolocation Watcher
@@ -289,7 +302,10 @@ export default function Home() {
   };
 
   return (
-    <main className="relative w-full h-[100dvh] max-h-[100dvh] flex flex-col bg-slate-950 select-none overflow-hidden font-sans">
+    <main
+      className="fixed inset-0 w-full flex flex-col bg-slate-950 select-none overflow-hidden font-sans"
+      style={{ height: 'var(--app-height, 100svh)', maxHeight: 'var(--app-height, 100svh)' }}
+    >
       {/* Top HUD Container */}
       <div className="absolute top-0 left-0 right-0 z-30 p-2 sm:p-3 flex flex-col gap-1.5 sm:gap-2 pointer-events-none pt-[max(0.5rem,env(safe-area-inset-top))]">
         {/* Row 1: Brand/Speed, Desktop Mode Selector, Gauges/Rider */}
@@ -392,7 +408,7 @@ export default function Home() {
       </div>
 
       {/* Bottom Control Dock (Anchored with safe-area spacing to prevent bottom nav clipping) */}
-      <footer className="absolute bottom-4 left-3 right-3 sm:left-4 sm:right-4 z-30 max-w-lg mx-auto bg-slate-900/95 backdrop-blur-md border border-slate-800 rounded-3xl p-2 sm:p-2.5 shadow-2xl flex items-center justify-between pb-[max(0.625rem,env(safe-area-inset-bottom))]">
+      <footer className="absolute bottom-6 left-3 right-3 sm:left-4 sm:right-4 z-30 max-w-lg mx-auto bg-slate-900/95 backdrop-blur-md border border-slate-800 rounded-3xl p-2 sm:p-2.5 shadow-2xl flex items-center justify-between pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         {/* Record / Stop Button */}
         {!isRecording ? (
           <button

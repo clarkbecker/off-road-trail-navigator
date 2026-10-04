@@ -383,7 +383,7 @@ export default function TrailMap({
       )}
 
       {/* Floating Action Buttons Column (Right Side - Unified Stack: Layers, Recenter, Hazard) */}
-      <div className="absolute right-3 sm:right-4 bottom-20 sm:bottom-24 z-30 flex flex-col items-center gap-2.5">
+      <div className="absolute right-3 sm:right-4 bottom-28 sm:bottom-30 z-30 flex flex-col items-center gap-2.5">
         {/* Layer Selector */}
         <button
           onClick={() => setActiveLayerIndex((prev) => (prev + 1) % MAP_LAYERS.length)}
@@ -416,7 +416,7 @@ export default function TrailMap({
       </div>
 
       {/* Layer tag pill */}
-      <div className="absolute left-3 sm:left-4 bottom-20 sm:bottom-24 z-20 bg-slate-900/80 backdrop-blur border border-slate-800 px-3 py-1 rounded-full text-[11px] text-slate-400 font-medium pointer-events-none shadow-lg">
+      <div className="absolute left-3 sm:left-4 bottom-28 sm:bottom-30 z-20 bg-slate-900/80 backdrop-blur border border-slate-800 px-3 py-1 rounded-full text-[11px] text-slate-400 font-medium pointer-events-none shadow-lg">
         Layer: <span className="text-orange-400">{MAP_LAYERS[activeLayerIndex].name}</span>
       </div>
     </div>
