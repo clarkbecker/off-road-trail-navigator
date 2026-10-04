@@ -1,0 +1,60 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "trail-pilot-001",
+        "name": "Wild Rivers State Trail (Minong to Trego Segment)",
+        "route_type": "designated_trail",
+        "official_status": "open",
+        "visibility": "public",
+        "cost_utv": 0.5,
+        "cost_mtb": 0.8,
+        "cost_hike": 1.0,
+        "county": "Washburn",
+        "surface": "Crushed gravel / packed dirt",
+        "width_feet": 12
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-91.8241, 46.1022, 320.0],
+          [-91.8225, 46.0915, 318.5],
+          [-91.8202, 46.0789, 315.0],
+          [-91.8187, 46.0642, 312.2],
+          [-91.8155, 46.0498, 308.7],
+          [-91.8130, 46.0354, 305.4],
+          [-91.8118, 46.0210, 302.1],
+          [-91.8105, 46.0075, 300.0]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "trail-pilot-002",
+        "name": "Burnett County Connector Trail",
+        "route_type": "designated_trail",
+        "official_status": "open",
+        "visibility": "public",
+        "cost_utv": 0.5,
+        "cost_mtb": 0.9,
+        "cost_hike": 1.2,
+        "county": "Burnett",
+        "surface": "Sand / hard-pack dirt",
+        "width_feet": 10
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-92.1245, 45.9241, 290.0],
+          [-92.1150, 45.9280, 292.0],
+          [-92.1020, 45.9325, 295.4],
+          [-92.0880, 45.9380, 298.1],
+          [-92.0720, 45.9410, 301.2]
+        ]
+      }
+    }
+  ]
+}

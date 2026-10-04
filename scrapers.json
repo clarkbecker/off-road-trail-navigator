@@ -1,0 +1,26 @@
+[
+  {
+    "county": "Washburn County",
+    "state": "WI",
+    "url": "https://co.washburn.wi.us/atv-trail-status/",
+    "selectors": ["main", ".content", "#main-content"],
+    "keywords": {
+      "open": ["open", "trails open"],
+      "closed": ["closed", "trails closed", "fire danger"],
+      "caution": ["caution", "rough conditions", "logging activity"]
+    },
+    "fire_danger_rule": "Trails automatically close when DNR fire danger reaches 'Very High' or 'Extreme'."
+  },
+  {
+    "county": "Burnett County",
+    "state": "WI",
+    "url": "https://www.burnettcountywi.gov/364/Trail-Updates",
+    "selectors": ["main", ".detailContent", "#City_Content"],
+    "keywords": {
+      "open": ["open", "all trails open"],
+      "closed": ["closed", "temporary closure", "mud season"],
+      "caution": ["caution", "washout", "logging"]
+    },
+    "fire_danger_rule": "Monitored per county forestry and parks board advisories."
+  }
+]
