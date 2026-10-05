@@ -31,7 +31,7 @@ export async function GET() {
         t.cost_hike as "costHike", 
         t.distance_km as "distanceKm", 
         t.difficulty,
-        ST_AsGeoJSON(t.geom) as geojson,
+        ST_AsGeoJSON(ST_SimplifyPreserveTopology(t.geom, 0.00005)) as geojson,
         extract(epoch from t.created_at) * 1000 as "createdAt"
       FROM trails t
       LEFT JOIN jurisdictions j ON t.jurisdiction_id = j.id
