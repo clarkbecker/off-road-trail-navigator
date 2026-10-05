@@ -316,14 +316,25 @@ export default function TrailMap({
         }
 
         if (isActive) {
-          color = '#38bdf8';
+          // High-contrast white halo casing underneath to separate from water bodies and dark forest terrain
+          const casing = L.polyline(coords, {
+            color: '#ffffff',
+            weight: 9,
+            opacity: 0.95,
+            lineCap: 'round',
+            lineJoin: 'round',
+          });
+          casing.addTo(trailsGroupRef.current);
+          color = '#ff007f'; // Ultra-vibrant Laser Neon Magenta / Hot Pink
         }
 
         const line = L.polyline(coords, {
           color,
           weight: isActive ? 6 : isRoadRoute ? 3.5 : 4.5,
           opacity: isActive ? 1 : isClosed ? 0.95 : 0.85,
-          dashArray,
+          dashArray: isActive ? undefined : dashArray,
+          lineCap: 'round',
+          lineJoin: 'round',
         });
 
         const statusBadge = isClosed ? '🔴 CLOSED' : trail.officialStatus === 'caution' ? '⚠️ CAUTION' : '🟢 OPEN';

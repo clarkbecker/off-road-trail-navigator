@@ -416,9 +416,9 @@ export default function Home() {
 
         {/* Row 4: Active Trail Focus Banner */}
         {activeTrail && !isRecording && (
-          <div className="self-center pointer-events-auto bg-slate-900/95 border border-sky-500/80 backdrop-blur-md px-3 sm:px-4 py-1.5 rounded-full shadow-2xl flex items-center gap-2 text-xs font-mono">
-            <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse shrink-0" />
-            <span className="text-sky-300 font-bold truncate max-w-[170px] sm:max-w-xs">{activeTrail.name}</span>
+          <div className="self-center pointer-events-auto bg-slate-900/95 border border-pink-500/80 backdrop-blur-md px-3 sm:px-4 py-1.5 rounded-full shadow-2xl shadow-pink-950/40 flex items-center gap-2 text-xs font-mono">
+            <span className="w-2 h-2 rounded-full bg-[#ff007f] animate-pulse shrink-0" />
+            <span className="text-pink-300 font-bold truncate max-w-[170px] sm:max-w-xs">{activeTrail.name}</span>
             <span className="text-slate-400 text-[11px] shrink-0">({activeTrail.distanceKm.toFixed(1)} km)</span>
             <button
               onClick={() => setActiveTrailId(null)}
