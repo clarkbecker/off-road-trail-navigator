@@ -14,6 +14,7 @@ interface TrailMapProps {
   hazards?: HazardReport[];
   transportMode?: TransportMode;
   activeTrailId: string | null;
+  onSelectTrail?: (trailId: string | null) => void;
   onSelectWaypoint?: (wp: Waypoint) => void;
   onSelectHazard?: (hazard: HazardReport) => void;
   onMapClickAddWaypoint?: (coords: { lat: number; lng: number }) => void;
@@ -79,6 +80,7 @@ export default function TrailMap({
   hazards = [],
   transportMode = 'utv',
   activeTrailId,
+  onSelectTrail,
   onSelectWaypoint,
   onSelectHazard,
   onMapClickAddWaypoint,
@@ -349,11 +351,35 @@ export default function TrailMap({
           { sticky: true }
         );
 
+        if (onSelectTrail) {
+          line.on('click', () => {
+            onSelectTrail(isActive ? null : trail.id);
+          });
+        }
+
         line.addTo(trailsGroupRef.current);
       });
     }
     updateTrails();
-  }, [trails, activeTrailId, isMapReady, transportMode]);
+  }, [trails, activeTrailId, isMapReady, transportMode, onSelectTrail]);
+
+  // Auto-zoom and frame map around active trail whenever selected
+  useEffect(() => {
+    if (!mapInstanceRef.current || !activeTrailId || !isMapReady) return;
+    const activeTrail = trails.find((t) => t.id === activeTrailId);
+    if (activeTrail && activeTrail.points && activeTrail.points.length > 0) {
+      const coords: [number, number][] = activeTrail.points.map((p) => [p.lat, p.lng]);
+      try {
+        mapInstanceRef.current.fitBounds(coords, {
+          padding: [60, 60],
+          maxZoom: 15,
+          animate: true,
+        });
+      } catch (err) {
+        console.warn('Could not fit bounds to active trail:', err);
+      }
+    }
+  }, [activeTrailId, trails, isMapReady]);
 
   // Render Waypoints
   useEffect(() => {

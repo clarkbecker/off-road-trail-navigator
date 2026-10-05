@@ -38,6 +38,7 @@ import {
   AlertTriangle,
   User,
   Shield,
+  X,
 } from 'lucide-react';
 
 // Dynamic import for Leaflet map to prevent SSR window issues
@@ -317,6 +318,7 @@ export default function Home() {
 
   const currentDistanceKm = calculateTrackDistanceKm(recordedPoints);
   const currentDistanceMiles = currentDistanceKm * 0.621371;
+  const activeTrail = trails.find((t) => t.id === activeTrailId);
 
   const formatTimer = (sec: number) => {
     const m = Math.floor(sec / 60);
@@ -411,6 +413,22 @@ export default function Home() {
             </div>
           </div>
         )}
+
+        {/* Row 4: Active Trail Focus Banner */}
+        {activeTrail && !isRecording && (
+          <div className="self-center pointer-events-auto bg-slate-900/95 border border-sky-500/80 backdrop-blur-md px-3 sm:px-4 py-1.5 rounded-full shadow-2xl flex items-center gap-2 text-xs font-mono">
+            <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse shrink-0" />
+            <span className="text-sky-300 font-bold truncate max-w-[170px] sm:max-w-xs">{activeTrail.name}</span>
+            <span className="text-slate-400 text-[11px] shrink-0">({activeTrail.distanceKm.toFixed(1)} km)</span>
+            <button
+              onClick={() => setActiveTrailId(null)}
+              className="ml-1 p-0.5 rounded-full hover:bg-slate-800 text-slate-400 hover:text-white"
+              title="Clear focus"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Main Map Viewport */}
@@ -423,6 +441,7 @@ export default function Home() {
           hazards={hazards}
           transportMode={transportMode}
           activeTrailId={activeTrailId}
+          onSelectTrail={(id) => setActiveTrailId(id)}
           onMapClickAddWaypoint={handleMapClickAddWaypoint}
           isAddingWaypointMode={isAddingWaypointMode}
           onSelectHazard={(h) => alert(`Hazard: ${h.title}\n${h.description || 'Reported on trail'}`)}

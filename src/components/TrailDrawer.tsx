@@ -150,8 +150,18 @@ export default function TrailDrawer({
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <h3 className="font-semibold text-slate-100 text-sm">{trail.name}</h3>
+                        <div
+                          className="flex-1 cursor-pointer"
+                          onClick={() => {
+                            if (isActive) {
+                              onSelectTrail(null);
+                            } else {
+                              onSelectTrail(trail.id);
+                              onClose();
+                            }
+                          }}
+                        >
+                          <h3 className="font-semibold text-slate-100 text-sm hover:text-orange-400 transition-colors">{trail.name}</h3>
                           <div className="flex items-center gap-2 mt-1 text-xs text-slate-400 font-mono">
                             <span>{trail.distanceKm.toFixed(2)} km</span>
                             <span>•</span>
@@ -166,13 +176,20 @@ export default function TrailDrawer({
                         {/* Actions */}
                         <div className="flex items-center gap-1">
                           <button
-                            onClick={() => onSelectTrail(isActive ? null : trail.id)}
+                            onClick={() => {
+                              if (isActive) {
+                                onSelectTrail(null);
+                              } else {
+                                onSelectTrail(trail.id);
+                                onClose();
+                              }
+                            }}
                             className={`p-1.5 rounded-lg border ${
                               isActive
                                 ? 'bg-orange-500 text-white border-orange-400'
                                 : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
                             }`}
-                            title={isActive ? 'Deselect trail' : 'Focus trail'}
+                            title={isActive ? 'Deselect trail' : 'Focus and zoom on map'}
                           >
                             <Eye className="w-3.5 h-3.5" />
                           </button>
