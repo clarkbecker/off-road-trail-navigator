@@ -1,4 +1,4 @@
-const CACHE_NAME = 'trailnav-cache-v2';
+const CACHE_NAME = 'trailnav-cache-v3';
 const OFFLINE_URLS = [
   '/',
   '/manifest.json',
@@ -37,6 +37,12 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
+
+  // NEVER cache API requests in Service Worker cache - always fetch fresh
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(fetch(request));
+    return;
+  }
 
   // Network-first for page navigations to always load latest code
   if (request.mode === 'navigate') {

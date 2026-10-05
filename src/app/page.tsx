@@ -83,6 +83,7 @@ export default function Home() {
     lat: number;
     lng: number;
   } | null>(null);
+  const [isSyncingTrails, setIsSyncingTrails] = useState(false);
 
   // Load IndexedDB items on start & fetch cloud trails/hazards from Supabase
   useEffect(() => {
@@ -97,23 +98,19 @@ export default function Home() {
       setHazards(savedHazards);
       setCurrentRider(activeRider);
 
-      // Fetch cloud trails & hazards from Supabase PostGIS
+      // Fetch cloud trails & hazards from Supabase PostGIS with fresh cache-busting
       try {
         const [trailsRes, hazardsRes] = await Promise.all([
-          fetch('/api/trails'),
-          fetch('/api/hazards'),
+          fetch(`/api/trails?t=${Date.now()}`, { cache: 'no-store' }),
+          fetch(`/api/hazards?t=${Date.now()}`, { cache: 'no-store' }),
         ]);
 
         if (trailsRes.ok) {
           const data = await trailsRes.json();
           if (data.trails && data.trails.length > 0) {
-            setTrails((local) => {
-              const existingIds = new Set(local.map((t) => t.id));
-              const newFromCloud = data.trails.filter((t: Trail) => !existingIds.has(t.id));
-              // Cache in local IndexedDB for offline use
-              newFromCloud.forEach((t: Trail) => saveTrail(t));
-              return [...newFromCloud, ...local];
-            });
+            setTrails(data.trails);
+            // Cache in local IndexedDB for offline use
+            data.trails.forEach((t: Trail) => saveTrail(t));
           }
         }
 
@@ -261,6 +258,30 @@ export default function Home() {
       });
     } catch (e) {
       console.warn('Saved locally; will sync when back online');
+    }
+  };
+
+  // Sync Cloud Trails
+  const handleSyncCloudTrails = async () => {
+    setIsSyncingTrails(true);
+    try {
+      const res = await fetch(`/api/trails?t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache' },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.trails && data.trails.length > 0) {
+          setTrails(data.trails);
+          for (const t of data.trails) {
+            await saveTrail(t);
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Sync failed:', err);
+    } finally {
+      setIsSyncingTrails(false);
     }
   };
 
@@ -526,6 +547,8 @@ export default function Home() {
           await deleteWaypoint(id);
           setWaypoints((prev) => prev.filter((w) => w.id !== id));
         }}
+        onSyncCloudTrails={handleSyncCloudTrails}
+        isSyncing={isSyncingTrails}
       />
 
       <WaypointModal

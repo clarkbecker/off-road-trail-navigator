@@ -96,7 +96,16 @@ export async function GET() {
       };
     });
 
-    return NextResponse.json({ trails });
+    return NextResponse.json(
+      { trails },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        },
+      }
+    );
   } catch (err: any) {
     console.error('Error fetching trails from Supabase PostGIS:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });

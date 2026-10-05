@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Trail, Waypoint } from '@/types/trail';
 import { exportTrailToGpx, parseGpx } from '@/lib/gpx';
-import { Download, Upload, Trash2, MapPin, Eye, Mountain, X, Camera } from 'lucide-react';
+import { Download, Upload, Trash2, MapPin, Eye, Mountain, X, Camera, RefreshCw } from 'lucide-react';
 
 interface TrailDrawerProps {
   isOpen: boolean;
@@ -15,6 +15,8 @@ interface TrailDrawerProps {
   onDeleteTrail: (id: string) => void;
   onImportTrail: (trail: Trail) => void;
   onDeleteWaypoint: (id: string) => void;
+  onSyncCloudTrails?: () => void;
+  isSyncing?: boolean;
 }
 
 export default function TrailDrawer({
@@ -27,6 +29,8 @@ export default function TrailDrawer({
   onDeleteTrail,
   onImportTrail,
   onDeleteWaypoint,
+  onSyncCloudTrails,
+  isSyncing = false,
 }: TrailDrawerProps) {
   const [activeTab, setActiveTab] = useState<'trails' | 'waypoints'>('trails');
 
@@ -108,12 +112,26 @@ export default function TrailDrawer({
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {activeTab === 'trails' ? (
             <>
-              {/* Import GPX Action */}
-              <label className="flex items-center justify-center gap-2 p-3 border-2 border-dashed border-slate-700 hover:border-orange-500 rounded-xl cursor-pointer bg-slate-950/40 transition-colors group">
-                <Upload className="w-4 h-4 text-orange-400 group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-medium text-slate-300">Import GPX Trail File</span>
-                <input type="file" accept=".gpx" onChange={handleFileUpload} className="hidden" />
-              </label>
+              {/* Trail Actions Row: Import GPX + Sync Cloud */}
+              <div className="flex items-center gap-2">
+                <label className="flex-1 flex items-center justify-center gap-2 p-3 border-2 border-dashed border-slate-700 hover:border-orange-500 rounded-xl cursor-pointer bg-slate-950/40 transition-colors group">
+                  <Upload className="w-4 h-4 text-orange-400 group-hover:scale-110 transition-transform" />
+                  <span className="text-xs font-medium text-slate-300">Import GPX</span>
+                  <input type="file" accept=".gpx" onChange={handleFileUpload} className="hidden" />
+                </label>
+
+                {onSyncCloudTrails && (
+                  <button
+                    onClick={onSyncCloudTrails}
+                    disabled={isSyncing}
+                    className="flex items-center justify-center gap-1.5 px-3.5 py-3 border border-cyan-800/80 bg-cyan-950/40 hover:bg-cyan-900/50 rounded-xl text-cyan-300 text-xs font-semibold transition-all active:scale-95 disabled:opacity-50 shadow-sm"
+                    title="Force sync and refresh all trails from cloud database"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+                    <span>{isSyncing ? 'Syncing...' : 'Sync Cloud'}</span>
+                  </button>
+                )}
+              </div>
 
               {trails.length === 0 ? (
                 <div className="py-12 text-center text-slate-500 text-sm">
