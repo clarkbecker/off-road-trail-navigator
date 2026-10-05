@@ -324,11 +324,28 @@ export default function TrailMap({
           dashArray,
         });
 
-        const statusBadge = isClosed ? '🔴 CLOSED' : '🟢 OPEN';
+        const statusBadge = isClosed ? '🔴 CLOSED' : trail.officialStatus === 'caution' ? '⚠️ CAUTION' : '🟢 OPEN';
         const typeBadge = isRoadRoute ? '🛣️ ATV Road Route' : '🌲 Off-Road Trail';
+        const jurisdictionBadge = trail.jurisdictionName ? `<br/><span style="color:#94a3b8; font-size:11px;">Authority: ${trail.jurisdictionName}</span>` : '';
+        const conditionBadge = trail.statusHeadline ? `<br/><span style="color:${isClosed ? '#f87171' : '#fbbf24'}; font-size:11px; font-weight:600;">${trail.statusHeadline}</span>` : '';
+        const allowedVehicles = [
+          trail.allowedUtv ? 'UTV' : null,
+          trail.allowedAtv ? 'ATV' : null,
+          trail.allowedDirtbike ? 'Dirt Bike' : null,
+          trail.allowed4x4 ? '4x4' : null,
+          trail.allowedMtb ? 'MTB' : null,
+          trail.allowedHiking ? 'Hike' : null,
+        ].filter(Boolean).join(' • ');
 
         line.bindTooltip(
-          `<b>${trail.name}</b><br/>${statusBadge} • ${typeBadge}<br/>${trail.distanceKm} km • ${trail.difficulty}`,
+          `<div style="font-family:system-ui,-apple-system,sans-serif; min-width:160px;">
+            <div style="font-weight:700; font-size:13px; color:#f8fafc;">${trail.name}</div>
+            <div style="font-size:11px; margin-top:2px;">${statusBadge} • ${typeBadge}</div>
+            ${conditionBadge}
+            ${jurisdictionBadge}
+            <div style="font-size:10px; color:#cbd5e1; margin-top:3px;">Allowed: ${allowedVehicles || 'Multi-Use'}</div>
+            <div style="font-size:10px; color:#94a3b8;">${trail.distanceKm} km • ${trail.difficulty}</div>
+          </div>`,
           { sticky: true }
         );
 

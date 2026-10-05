@@ -80,6 +80,21 @@ export interface Trail {
   costUtv?: number;
   costMtb?: number;
   costHike?: number;
+  jurisdictionId?: string;
+  jurisdictionName?: string;
+  systemName?: string;
+  trailNumber?: string;
+  statusHeadline?: string;
+  statusReason?: string;
+  allowedUtv?: boolean;
+  allowedAtv?: boolean;
+  allowedDirtbike?: boolean;
+  allowed4x4?: boolean;
+  allowedMtb?: boolean;
+  allowedHiking?: boolean;
+  maxUtvWidthInches?: number;
+  surfaceType?: string;
+  isPublicRoadRoute?: boolean;
 }
 
 export interface MapLayerConfig {

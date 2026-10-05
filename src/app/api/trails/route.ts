@@ -6,34 +6,64 @@ export async function GET() {
     const pool = getPgPool();
     const query = `
       SELECT 
-        id, 
-        name, 
-        description, 
-        route_type as "routeType", 
-        official_status as "officialStatus", 
-        visibility, 
-        cost_utv as "costUtv", 
-        cost_mtb as "costMtb", 
-        cost_hike as "costHike", 
-        distance_km as "distanceKm", 
-        difficulty,
-        ST_AsGeoJSON(geom) as geojson,
-        extract(epoch from created_at) * 1000 as "createdAt"
-      FROM trails
-      WHERE visibility = 'public'
-      ORDER BY created_at DESC;
+        t.id, 
+        t.name, 
+        t.description, 
+        t.route_type as "routeType", 
+        COALESCE(j.current_status, t.official_status::text, 'open') as "officialStatus",
+        j.status_headline as "statusHeadline",
+        j.current_status_reason as "statusReason",
+        j.name as "jurisdictionName",
+        t.system_name as "systemName",
+        t.trail_number as "trailNumber",
+        t.allowed_utv as "allowedUtv",
+        t.allowed_atv as "allowedAtv",
+        t.allowed_dirtbike as "allowedDirtbike",
+        t.allowed_4x4 as "allowed4x4",
+        t.allowed_mtb as "allowedMtb",
+        t.allowed_hiking as "allowedHiking",
+        t.max_utv_width_inches as "maxUtvWidthInches",
+        t.surface_type as "surfaceType",
+        t.is_public_road_route as "isPublicRoadRoute",
+        t.visibility, 
+        t.cost_utv as "costUtv", 
+        t.cost_mtb as "costMtb", 
+        t.cost_hike as "costHike", 
+        t.distance_km as "distanceKm", 
+        t.difficulty,
+        ST_AsGeoJSON(t.geom) as geojson,
+        extract(epoch from t.created_at) * 1000 as "createdAt"
+      FROM trails t
+      LEFT JOIN jurisdictions j ON t.jurisdiction_id = j.id
+      WHERE t.visibility = 'public'
+      ORDER BY t.created_at DESC;
     `;
 
     const result = await pool.query(query);
 
     const trails = result.rows.map((row) => {
-      const parsedGeo = JSON.parse(row.geojson);
-      const points = parsedGeo.coordinates.map((coord: number[]) => ({
-        lng: coord[0],
-        lat: coord[1],
-        elevation: coord[2] || null,
-        timestamp: Date.now(),
-      }));
+      let points: Array<{ lng: number; lat: number; elevation: number | null; timestamp: number }> = [];
+
+      try {
+        const parsedGeo = JSON.parse(row.geojson);
+        let coords: number[][] = [];
+
+        if (parsedGeo.type === 'LineString') {
+          coords = parsedGeo.coordinates;
+        } else if (parsedGeo.type === 'MultiLineString') {
+          // Flatten multi-line string paths into sequential points for navigator
+          coords = parsedGeo.coordinates.flat(1);
+        }
+
+        points = coords.map((coord: number[]) => ({
+          lng: coord[0],
+          lat: coord[1],
+          elevation: coord[2] || null,
+          timestamp: Date.now(),
+        }));
+      } catch (e) {
+        console.warn('Error parsing geojson for trail:', row.name, e);
+      }
 
       return {
         id: row.id,
@@ -41,6 +71,20 @@ export async function GET() {
         description: row.description,
         routeType: row.routeType,
         officialStatus: row.officialStatus,
+        statusHeadline: row.statusHeadline,
+        statusReason: row.statusReason,
+        jurisdictionName: row.jurisdictionName,
+        systemName: row.systemName,
+        trailNumber: row.trailNumber,
+        allowedUtv: row.allowedUtv ?? true,
+        allowedAtv: row.allowedAtv ?? true,
+        allowedDirtbike: row.allowedDirtbike ?? true,
+        allowed4x4: row.allowed4x4 ?? false,
+        allowedMtb: row.allowedMtb ?? false,
+        allowedHiking: row.allowedHiking ?? false,
+        maxUtvWidthInches: row.maxUtvWidthInches ?? null,
+        surfaceType: row.surfaceType || 'dirt',
+        isPublicRoadRoute: Boolean(row.isPublicRoadRoute),
         visibility: row.visibility,
         costUtv: row.costUtv ? parseFloat(row.costUtv) : 0.5,
         costMtb: row.costMtb ? parseFloat(row.costMtb) : 1.0,
