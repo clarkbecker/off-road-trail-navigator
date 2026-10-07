@@ -50,7 +50,7 @@ export default function MapLegend({ className = '' }: MapLegendProps) {
             {/* UTV Trail */}
             <div className="flex items-center justify-between text-xs">
               <div className="flex items-center gap-2.5">
-                <span className="w-6 h-1 rounded bg-orange-500 shadow-sm shadow-orange-500/50" />
+                <span className="w-6 h-1.5 rounded-full bg-orange-500 shadow-sm shadow-orange-500/50" />
                 <span className="font-medium text-slate-200">UTV / 4x4 Off-Road</span>
               </div>
               <span className="text-[10px] text-orange-400 font-mono font-semibold">Dirt / Woods</span>
@@ -59,7 +59,7 @@ export default function MapLegend({ className = '' }: MapLegendProps) {
             {/* MTB Singletrack */}
             <div className="flex items-center justify-between text-xs">
               <div className="flex items-center gap-2.5">
-                <span className="w-6 h-1 rounded bg-emerald-500 shadow-sm shadow-emerald-500/50" />
+                <span className="w-6 h-1.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50" />
                 <span className="font-medium text-slate-200">MTB / Mountain Bike</span>
               </div>
               <span className="text-[10px] text-emerald-400 font-mono font-semibold">Singletrack</span>
@@ -68,16 +68,16 @@ export default function MapLegend({ className = '' }: MapLegendProps) {
             {/* Hiking Trail */}
             <div className="flex items-center justify-between text-xs">
               <div className="flex items-center gap-2.5">
-                <span className="w-6 h-1 rounded bg-sky-500 shadow-sm shadow-sky-500/50" />
+                <span className="w-6 h-1.5 rounded-full bg-purple-500 shadow-sm shadow-purple-500/50" />
                 <span className="font-medium text-slate-200">Hiking / Foot Trail</span>
               </div>
-              <span className="text-[10px] text-sky-400 font-mono font-semibold">Non-motorized</span>
+              <span className="text-[10px] text-purple-400 font-mono font-semibold">Non-motorized</span>
             </div>
 
             {/* Road Route Open to UTVs */}
             <div className="flex items-center justify-between text-xs">
               <div className="flex items-center gap-2.5">
-                <span className="w-6 h-1 rounded border-b-2 border-dashed border-amber-400" />
+                <span className="w-6 h-1.5 rounded border-b-2 border-dashed border-amber-400" />
                 <span className="font-medium text-slate-200">ATV Road Route</span>
               </div>
               <span className="text-[10px] text-amber-400 font-mono font-semibold">Town / CTH Road</span>

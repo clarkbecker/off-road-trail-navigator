@@ -166,9 +166,11 @@ export default function TrailMap({
 
         recordingPolylineRef.current = L.polyline([], {
           color: initialTrackColor,
-          weight: 6,
+          weight: 7,
           opacity: 0.95,
           dashArray: transportMode === 'utv' ? '6, 8' : undefined,
+          lineCap: 'round',
+          lineJoin: 'round',
         }).addTo(map);
 
         // Map click handler for dropping waypoint
@@ -296,10 +298,16 @@ export default function TrailMap({
         // Closed -> Red dashed
         // Road Route -> Amber dashed
         // Bike/MTB -> Emerald green
-        // Hike -> Sky blue
-        // UTV/4x4 -> Vibrant orange
+        // Hike -> Vivid Purple (#a855f7)
+        // UTV/4x4 -> Vibrant orange (#f97316)
         let color = trail.color || '#f97316';
         let dashArray: string | undefined = undefined;
+
+        const isHikeTrail =
+          (trail.costHike != null && trail.costHike <= 0.5 && (!trail.costUtv || trail.costUtv > 0.8)) ||
+          (trail.allowedHiking && !trail.allowedUtv && !trail.allowedAtv);
+        const isMtbTrail =
+          trail.costMtb != null && trail.costMtb <= 0.5 && (!trail.costUtv || trail.costUtv > 0.6);
 
         if (isClosed) {
           color = '#ef4444';
@@ -307,10 +315,10 @@ export default function TrailMap({
         } else if (isRoadRoute) {
           color = '#f59e0b';
           dashArray = '6, 6';
-        } else if (trail.costMtb != null && trail.costMtb <= 0.5 && (!trail.costUtv || trail.costUtv > 0.6)) {
+        } else if (isMtbTrail) {
           color = '#10b981';
-        } else if (trail.costHike != null && trail.costHike <= 0.5 && (!trail.costUtv || trail.costUtv > 0.8)) {
-          color = '#0ea5e9';
+        } else if (isHikeTrail || (transportMode === 'hike' && trail.allowedHiking)) {
+          color = '#a855f7'; // Ultra-vivid Purple (distinct from water and green canopy)
         } else {
           color = '#f97316';
         }
@@ -319,7 +327,7 @@ export default function TrailMap({
           // High-contrast white halo casing underneath to separate from water bodies and dark forest terrain
           const casing = L.polyline(coords, {
             color: '#ffffff',
-            weight: 9,
+            weight: 14,
             opacity: 0.95,
             lineCap: 'round',
             lineJoin: 'round',
@@ -328,10 +336,23 @@ export default function TrailMap({
           color = '#ff007f'; // Ultra-vibrant Laser Neon Magenta / Hot Pink
         }
 
+        // Bolder, wider trail weights for high visibility on mobile screens and outdoors in direct sunlight:
+        // Active -> 9px
+        // Hike Trail (or when in Hike mode) -> 7.5px
+        // Off-road / MTB / Fire Lane -> 7px
+        // Road Route -> 5.5px
+        const weight = isActive
+          ? 9
+          : isRoadRoute
+          ? 5.5
+          : isHikeTrail || (transportMode === 'hike' && trail.allowedHiking)
+          ? 7.5
+          : 7;
+
         const line = L.polyline(coords, {
           color,
-          weight: isActive ? 6 : isRoadRoute ? 3.5 : 4.5,
-          opacity: isActive ? 1 : isClosed ? 0.95 : 0.85,
+          weight,
+          opacity: isActive ? 1 : isClosed ? 0.95 : 0.9,
           dashArray: isActive ? undefined : dashArray,
           lineCap: 'round',
           lineJoin: 'round',
